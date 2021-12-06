@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
     use super::super::convex_hull::{andrew_algo, jarvis_march};
-    use crate::geometry::Point;
+    use crate::convex_hull_2d::convex_hull::andrew_algo_sort;
+    use crate::geometry::{sort_points_by_x, Point};
 
     struct convex_hull_test_case {
         data: Vec<Point>,
@@ -118,14 +119,7 @@ mod tests {
             println!("test_case {}", i);
             assert_eq!(hull.len(), test_case.expected_hull.len());
             for pt1 in &hull {
-                let mut found = false;
-                for pt2 in &test_case.expected_hull {
-                    if pt1 == pt2 {
-                        found = true;
-                        break;
-                    };
-                }
-                assert!(found);
+                assert!(test_case.expected_hull.contains(pt1));
             }
         }
     }
@@ -134,19 +128,18 @@ mod tests {
         let all_test_cases = all_convex_hull_test_cases();
 
         for (i, test_case) in all_test_cases.iter().enumerate() {
-            let hull = andrew_algo(&test_case.data);
-            println!("test_case {}", i);
+            let mut test_data = test_case.data.clone();
+            let hull = andrew_algo_sort(&mut test_data);
             assert_eq!(hull.len(), test_case.expected_hull.len());
             for pt1 in &hull {
-                let mut found = false;
-                for pt2 in &test_case.expected_hull {
-                    if pt1 == pt2 {
-                        found = true;
-                        break;
-                    };
-                }
-                assert!(found);
+                assert!(test_case.expected_hull.contains(pt1));
             }
+        }
+    }
+
+    fn print_pt_list(data: &[Point]) {
+        for pt in data {
+            println!("{}", pt);
         }
     }
 }

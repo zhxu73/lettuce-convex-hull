@@ -46,6 +46,12 @@ pub fn chan_algo(data: &[Point]) -> Vec<Point> {
     jarvis_march(result.as_slice())
 }
 
+pub fn andrew_algo_sort(data: &mut Vec<Point>) -> Vec<Point> {
+    sort_points_by_x(data);
+    andrew_algo(data)
+}
+
+// Note: this assumes data is pre-sort by x-coordinate.
 pub fn andrew_algo(data: &[Point]) -> Vec<Point> {
     let mut result: Vec<Point> = vec![data.get(0).unwrap().clone(), data.get(1).unwrap().clone()];
     // upper hull
@@ -53,13 +59,15 @@ pub fn andrew_algo(data: &[Point]) -> Vec<Point> {
         while result.len() >= 2 {
             let last = result.last().unwrap();
             let second_last = result.get(result.len() - 2).unwrap();
-            if orientation(second_last, last, pt) <= 0 {
+            if orientation(second_last, last, pt) > 0 {
                 result.pop();
             } else {
                 break;
             }
         }
-        result.push(pt.clone());
+        if pt != result.last().unwrap() {
+            result.push(pt.clone());
+        }
     }
     let upper_hull_len = result.len();
     // println!("upper hull len: {}", upper_hull_len);
@@ -69,13 +77,15 @@ pub fn andrew_algo(data: &[Point]) -> Vec<Point> {
         while result.len() >= upper_hull_len {
             let last = result.last().unwrap();
             let second_last = result.get(result.len() - 2).unwrap();
-            if orientation(second_last, last, pt) <= 0 {
+            if orientation(second_last, last, pt) > 0 {
                 result.pop();
             } else {
                 break;
             }
         }
-        result.push(pt.clone());
+        if pt != result.get(0).unwrap() && pt != result.last().unwrap() {
+            result.push(pt.clone());
+        }
     }
     result
 }
