@@ -1,26 +1,14 @@
-use crate::geometry::{sort_points_by_x, Point};
+use crate::geometry::{print_pts, sort_points_by_x, Point};
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::{Duration, Instant};
-
-pub fn test_data() -> Vec<Point> {
-    vec![
-        Point::new(0.0, 0.0, 0.0),
-        Point::new(5.0, 0.0, 0.0),
-        Point::new(0.0, 5.0, 0.0),
-        Point::new(1.0, 1.0, 0.0),
-    ]
-}
 
 pub fn convex_hull(mut data: Vec<Point>) -> Vec<Point> {
     // sort by x
     sort_points_by_x(&mut data);
-    const sub_hull_count: usize = 1200;
-    let result = chan_algo(&data, sub_hull_count);
+    const SUB_HULL_COUNT: usize = 1200;
+    let result = chan_algo(&data, SUB_HULL_COUNT);
     println!("CH pt count: {}", result.len());
-    for pt in &result {
-        println!("{}", pt);
-    }
+    print_pts(&result);
     result
 }
 
@@ -37,6 +25,7 @@ fn chan_sub_hull_range(
     (start, end)
 }
 
+#[allow(dead_code)]
 pub fn chan_algo(data: &[Point], sub_hull_count: usize) -> Vec<Point> {
     println!("per hull: {}", data.len() / sub_hull_count);
     let mut all_sub_hull: Vec<Point> = vec![];
@@ -57,9 +46,10 @@ pub fn chan_algo(data: &[Point], sub_hull_count: usize) -> Vec<Point> {
     result
 }
 
+#[allow(dead_code)]
 pub fn chan_algo_threaded(data: Vec<Point>, sub_hull_count: usize) -> Vec<Point> {
     println!("per hull: {}", data.len() / sub_hull_count);
-    let mut all_sub_hull: Arc<Mutex<Vec<Point>>> = Arc::new(Mutex::new(vec![]));
+    let all_sub_hull: Arc<Mutex<Vec<Point>>> = Arc::new(Mutex::new(vec![]));
     let input_data = Arc::new(data);
 
     let mut thread_handles = vec![];
@@ -84,6 +74,7 @@ pub fn chan_algo_threaded(data: Vec<Point>, sub_hull_count: usize) -> Vec<Point>
     result
 }
 
+#[allow(dead_code)]
 pub fn andrew_algo_sort(data: &mut Vec<Point>) -> Vec<Point> {
     sort_points_by_x(data);
     andrew_algo(data)

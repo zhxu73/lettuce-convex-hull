@@ -1,12 +1,14 @@
 use super::convex_hull::jarvis_march;
-use crate::geometry::{sort_points_by_x, Point};
+use crate::geometry::Point;
 
+#[allow(dead_code)]
 // reorder the points before compute the 2D area (x-y plane).
 pub fn convex_hull_area_reorder(hull: &[Point]) -> f64 {
     let reordered = jarvis_march(hull);
     convex_hull_area(&reordered)
 }
 
+#[allow(dead_code)]
 // compute the 2D area (x-y plane).
 // Note: this assumes the vertices are ordered (clockwise or counter-clockwise).
 pub fn convex_hull_area(hull: &[Point]) -> f64 {
@@ -41,13 +43,14 @@ mod tests {
     use super::{convex_hull_area, convex_hull_area_reorder};
     use crate::geometry::Point;
 
+    struct test_data {
+        data: Vec<Point>,
+        expected_area: f64,
+        error: bool,
+    }
+
     #[test]
     fn test_convex_hull_area() {
-        struct test_data {
-            data: Vec<Point>,
-            expected_area: f64,
-            error: bool,
-        }
         let all_data: Vec<test_data> = vec![
             test_data {
                 data: vec![
@@ -91,6 +94,40 @@ mod tests {
 
         for case in all_data {
             let area = convex_hull_area(&case.data);
+            let tolerance = 0.000001;
+            if !case.error && (area - case.expected_area).abs() > tolerance {
+                eprintln!("area: {}, expected: {}", area, case.expected_area);
+                assert!(false);
+            }
+        }
+    }
+
+    #[test]
+    fn test_convex_hull_area_reorder() {
+        let all_data: Vec<test_data> = vec![
+            test_data {
+                data: vec![
+                    Point::new(0.0, 0.0, 0.0),
+                    Point::new(6.6, 0.0, 0.0),
+                    Point::new(6.6, 3.3, 0.0),
+                    Point::new(0.0, 3.3, 0.0),
+                ],
+                expected_area: 6.6 * 3.3,
+                error: false,
+            },
+            test_data {
+                data: vec![
+                    Point::new(0.0, 0.0, 0.0),
+                    Point::new(6.6, 0.0, 0.0),
+                    Point::new(0.0, 3.3, 0.0), // swapped compare to last test case
+                    Point::new(6.6, 3.3, 0.0), // swapped compare to last test case
+                ],
+                expected_area: 6.6 * 3.3,
+                error: false,
+            },
+        ];
+        for case in all_data {
+            let area = convex_hull_area_reorder(&case.data);
             let tolerance = 0.000001;
             if !case.error && (area - case.expected_area).abs() > tolerance {
                 eprintln!("area: {}, expected: {}", area, case.expected_area);

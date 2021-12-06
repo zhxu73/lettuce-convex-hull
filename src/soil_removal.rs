@@ -1,6 +1,6 @@
 use crate::geometry::{sort_points_by_x, Point};
-use std::cmp::min;
 
+#[allow(dead_code)]
 pub fn remove_soil_simple(mut points: Vec<Point>) -> Vec<Point> {
     let mut min_z: f64 = f64::MAX;
     let mut max_z: f64 = 0.0;
@@ -30,6 +30,7 @@ pub fn remove_soil_simple(mut points: Vec<Point>) -> Vec<Point> {
     result
 }
 
+#[allow(dead_code)]
 pub fn remove_soil(mut points: Vec<Point>) -> Vec<Point> {
     // min_y, max_y
     let mut min_y: f64 = f64::MAX;

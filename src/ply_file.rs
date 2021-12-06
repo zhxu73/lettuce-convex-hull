@@ -42,6 +42,7 @@ pub fn ply_to_pts(ply: Ply<DefaultElement>) -> Result<Vec<Point>, String> {
     return Ok(result);
 }
 
+#[allow(dead_code)]
 fn debug_print(ply: &Ply<DefaultElement>) {
     println!("Ply header: {:#?}", ply.header);
     let v1 = ply.payload.get("vertex").unwrap().get(0).unwrap().type_id();
