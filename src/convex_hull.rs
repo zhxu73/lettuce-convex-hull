@@ -12,9 +12,70 @@ pub fn test_data() -> Vec<Point> {
 pub fn convex_hull(mut data: Vec<Point>) -> Vec<Point> {
     // sort by x
     sort_points_by_x(&mut data);
-    let result = javis_march(&data);
+
+    let mut result = chan_algo(&data);
     for pt in &result {
         println!("{}", pt);
+    }
+    sort_points_by_x(&mut result);
+    result
+}
+
+fn chan_algo(data: &[Point]) -> Vec<Point> {
+    const sub_hull_count: usize = 1200;
+    println!("per hull: {}", data.len() / sub_hull_count);
+    let mut all_sub_hull: Vec<Point> = vec![];
+
+    let mut pt_counter = 0;
+
+    for i in 0..sub_hull_count {
+        let start = i * data.len() / sub_hull_count;
+        let end = match (i + 1) * data.len() / sub_hull_count < data.len() {
+            true => (i + 1) * data.len() / sub_hull_count,
+            false => data.len(),
+        };
+        pt_counter += data[start..end].len();
+        let sub_hull = andrew_algo(&data[start..end]);
+        all_sub_hull.extend(sub_hull);
+    }
+    if data.len() != pt_counter {
+        eprintln!("{} != {}", data.len(), pt_counter);
+        panic!("point count does not match");
+    }
+    let result = javis_march(all_sub_hull.as_slice());
+    javis_march(result.as_slice())
+}
+
+fn andrew_algo(data: &[Point]) -> Vec<Point> {
+    let mut result: Vec<Point> = vec![data.get(0).unwrap().clone(), data.get(1).unwrap().clone()];
+    // upper hull
+    for pt in (data[2..]).iter() {
+        while result.len() >= 2 {
+            let last = result.last().unwrap();
+            let second_last = result.get(result.len() - 2).unwrap();
+            if orientation(second_last, last, pt) <= 0 {
+                result.pop();
+            } else {
+                break;
+            }
+        }
+        result.push(pt.clone());
+    }
+    let upper_hull_len = result.len();
+    // println!("upper hull len: {}", upper_hull_len);
+
+    // lower hull
+    for pt in data.iter().rev() {
+        while result.len() >= upper_hull_len {
+            let last = result.last().unwrap();
+            let second_last = result.get(result.len() - 2).unwrap();
+            if orientation(second_last, last, pt) <= 0 {
+                result.pop();
+            } else {
+                break;
+            }
+        }
+        result.push(pt.clone());
     }
     result
 }
@@ -94,7 +155,7 @@ fn orientation(pt1: &Point, pt2: &Point, pt3: &Point) -> i32 {
 
 #[cfg(test)]
 mod tests {
-    use crate::convex_hull::javis_march;
+    use crate::convex_hull::{andrew_algo, javis_march};
     use crate::geometry::Point;
 
     struct convex_hull_test_case {
@@ -209,6 +270,26 @@ mod tests {
 
         for (i, test_case) in all_test_cases.iter().enumerate() {
             let hull = javis_march(&test_case.data);
+            println!("test_case {}", i);
+            assert_eq!(hull.len(), test_case.expected_hull.len());
+            for pt1 in &hull {
+                let mut found = false;
+                for pt2 in &test_case.expected_hull {
+                    if pt1 == pt2 {
+                        found = true;
+                        break;
+                    };
+                }
+                assert!(found);
+            }
+        }
+    }
+    #[test]
+    fn test_andrew_scan() {
+        let all_test_cases = all_convex_hull_test_cases();
+
+        for (i, test_case) in all_test_cases.iter().enumerate() {
+            let hull = andrew_algo(&test_case.data);
             println!("test_case {}", i);
             assert_eq!(hull.len(), test_case.expected_hull.len());
             for pt1 in &hull {
