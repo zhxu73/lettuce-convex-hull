@@ -1,4 +1,4 @@
-mod convex_hull;
+mod convex_hull_2d;
 mod geometry;
 mod ply_file;
 mod soil_removal;
@@ -30,8 +30,8 @@ fn main() {
     ply_file::write_to_ply_file(String::from("soil_removed.ply"), &soil_removed);
 
     println!("2d convex hull");
-    let hull = convex_hull::convex_hull(soil_removed);
-    let area = convex_hull::convex_hull_area(&hull);
+    let hull = convex_hull_2d::convex_hull(soil_removed);
+    let area = convex_hull_2d::convex_hull_area(&hull);
     println!("area: {}", area);
     ply_file::write_to_ply_file(String::from("output.ply"), &hull);
 }
