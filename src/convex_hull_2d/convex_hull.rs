@@ -1,4 +1,7 @@
 use crate::geometry::{sort_points_by_x, Point};
+use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
 
 pub fn test_data() -> Vec<Point> {
     vec![
@@ -12,27 +15,36 @@ pub fn test_data() -> Vec<Point> {
 pub fn convex_hull(mut data: Vec<Point>) -> Vec<Point> {
     // sort by x
     sort_points_by_x(&mut data);
-
-    let result = chan_algo(&data);
+    const sub_hull_count: usize = 1200;
+    let result = chan_algo(&data, sub_hull_count);
+    println!("CH pt count: {}", result.len());
     for pt in &result {
         println!("{}", pt);
     }
     result
 }
 
-pub fn chan_algo(data: &[Point]) -> Vec<Point> {
-    const sub_hull_count: usize = 1200;
+fn chan_sub_hull_range(
+    data_len: usize,
+    sub_hull_index: usize,
+    sub_hull_count: usize,
+) -> (usize, usize) {
+    let start = sub_hull_index * data_len / sub_hull_count;
+    let end = match (sub_hull_index + 1) * data_len / sub_hull_count < data_len {
+        true => (sub_hull_index + 1) * data_len / sub_hull_count,
+        false => data_len,
+    };
+    (start, end)
+}
+
+pub fn chan_algo(data: &[Point], sub_hull_count: usize) -> Vec<Point> {
     println!("per hull: {}", data.len() / sub_hull_count);
     let mut all_sub_hull: Vec<Point> = vec![];
 
     let mut pt_counter = 0;
 
     for i in 0..sub_hull_count {
-        let start = i * data.len() / sub_hull_count;
-        let end = match (i + 1) * data.len() / sub_hull_count < data.len() {
-            true => (i + 1) * data.len() / sub_hull_count,
-            false => data.len(),
-        };
+        let (start, end) = chan_sub_hull_range(data.len(), i, sub_hull_count);
         pt_counter += data[start..end].len();
         let sub_hull = andrew_algo(&data[start..end]);
         all_sub_hull.extend(sub_hull);
@@ -42,7 +54,34 @@ pub fn chan_algo(data: &[Point]) -> Vec<Point> {
         panic!("point count does not match");
     }
     let result = jarvis_march(all_sub_hull.as_slice());
-    jarvis_march(result.as_slice())
+    result
+}
+
+pub fn chan_algo_threaded(data: Vec<Point>, sub_hull_count: usize) -> Vec<Point> {
+    println!("per hull: {}", data.len() / sub_hull_count);
+    let mut all_sub_hull: Arc<Mutex<Vec<Point>>> = Arc::new(Mutex::new(vec![]));
+    let input_data = Arc::new(data);
+
+    let mut thread_handles = vec![];
+    for index in 0..sub_hull_count {
+        let input_data = Arc::clone(&input_data);
+        let all_sub_hull = Arc::clone(&all_sub_hull);
+        let handle = thread::spawn(move || {
+            let (start, end) = chan_sub_hull_range(input_data.len(), index, sub_hull_count);
+            let sub_hull = andrew_algo(&input_data[start..end]);
+            {
+                let mut val = all_sub_hull.lock().unwrap();
+                val.extend(sub_hull);
+            }
+        });
+        thread_handles.push(handle);
+    }
+    for handle in thread_handles {
+        handle.join().unwrap();
+    }
+
+    let result = jarvis_march(all_sub_hull.lock().unwrap().as_slice());
+    result
 }
 
 pub fn andrew_algo_sort(data: &mut Vec<Point>) -> Vec<Point> {
