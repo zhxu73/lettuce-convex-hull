@@ -13,11 +13,10 @@ pub fn convex_hull(mut data: Vec<Point>) -> Vec<Point> {
     // sort by x
     sort_points_by_x(&mut data);
 
-    let mut result = chan_algo(&data);
+    let result = chan_algo(&data);
     for pt in &result {
         println!("{}", pt);
     }
-    sort_points_by_x(&mut result);
     result
 }
 
