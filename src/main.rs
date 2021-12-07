@@ -33,7 +33,7 @@ fn main() {
 
     println!("3d convex hull");
     let hull_3d = convex_hull_3d::convex_hull(soil_removed);
-    for tri in hull_3d {
+    for tri in &hull_3d {
         println!("{}, {}, {}", tri.p1, tri.p2, tri.p3);
     }
     ply_file::write_to_ply_file(String::from("output-3d.ply"), &triangles_to_pts(hull_3d));
