@@ -1,3 +1,4 @@
+use crate::convex_hull_2d::benchmark::run_benchmark;
 use crate::geometry::{print_pts, sort_points_by_x, Point};
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -8,6 +9,7 @@ pub fn convex_hull(mut data: Vec<Point>) -> Vec<Point> {
     const SUB_HULL_COUNT: usize = 1200;
     let result = chan_algo(&data, SUB_HULL_COUNT);
     println!("CH pt count: {}", result.len());
+    // run_benchmark(&data);
     print_pts(&result);
     result
 }

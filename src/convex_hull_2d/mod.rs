@@ -1,4 +1,5 @@
 mod area;
+mod benchmark;
 mod convex_hull;
 mod convex_hull_test;
 
